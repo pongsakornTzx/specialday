@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Special Day Expense Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CSS Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- html2canvas for PNG Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fa-solid fa-receipt icon-gradient"></i>
+                    <span>Special<span>Day</span></span>
+                </div>
+                <p class="tagline">Expense Dashboard</p>
+            </div>
+            
+            <div class="sidebar-actions">
+                <button class="btn btn-primary" id="openAddRoundModalBtn">
+                    <i class="fa-solid fa-plus"></i> เพิ่มรอบใหม่
+                </button>
+                <button class="btn btn-secondary" id="downloadBackupBtn">
+                    <i class="fa-solid fa-download"></i> เซฟไฟล์ data.js
+                </button>
+                <button class="btn btn-secondary" id="openSettingsModalBtn">
+                    <i class="fa-solid fa-gear"></i> ตั้งค่า API Key
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="section-title">
+                    <i class="fa-regular fa-calendar-days"></i>
+                    <span>เลือกเลือกรอบวันที่</span>
+                </div>
+                <div class="round-list" id="roundList">
+                    <!-- Dynamic Round List will be rendered here -->
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer" style="position: relative;">
+                <button type="button" id="openPaymentModalBtn" class="edit-payment-btn" title="แก้ไขช่องทางโอนเงิน">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <p id="sidebarBankText">โอนค่าใช้จ่ายบัญชี SCB</p>
+                <p class="acc-num" id="sidebarAccNumText"><i class="fa-solid fa-credit-card"></i> 271-2-51047-4</p>
+                <p class="acc-name" id="sidebarAccNameText">พงศกร</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <div class="search-container">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="searchInput" placeholder="ค้นหาชื่อผู้ชำระเงิน..." autocomplete="off">
+                    <button id="clearSearchBtn" class="clear-search-btn" style="display:none;">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </button>
+                </div>
+                <div class="theme-toggle">
+                    <span id="currentRoundTitle" class="current-round-badge">
+                        <i class="fa-solid fa-clock-rotate-left"></i> รอบการชำระเงิน
+                    </span>
+                </div>
+            </header>
+
+            <!-- Overview Statistics -->
+            <section class="stats-overview">
+                <div class="stat-card glass-card">
+                    <div class="stat-icon-wrapper purple-glow">
+                        <i class="fa-solid fa-wallet"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>ยอดเต็มรวม</h3>
+                        <p class="stat-val" id="statTotalBefore">0.00 <span class="unit">บาท</span></p>
+                    </div>
+                </div>
+                
+                <div class="stat-card glass-card">
+                    <div class="stat-icon-wrapper teal-glow">
+                        <i class="fa-solid fa-tags"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>ส่วนลดรวม</h3>
+                        <p class="stat-val text-teal" id="statTotalDiscount">0.00 <span class="unit">บาท</span></p>
+                    </div>
+                </div>
+                
+                <div class="stat-card glass-card">
+                    <div class="stat-icon-wrapper pink-glow">
+                        <i class="fa-solid fa-hand-holding-dollar"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>ยอดชำระสุทธิ</h3>
+                        <p class="stat-val text-pink" id="statTotalAfter">0.00 <span class="unit">บาท</span></p>
+                    </div>
+                </div>
+
+                <div class="stat-card glass-card">
+                    <div class="stat-icon-wrapper blue-glow">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>ลูกค้าทั้งหมด</h3>
+                        <p class="stat-val text-blue" id="statTotalCustomers">0 <span class="unit">คน</span></p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Active Round Title & Summary -->
+            <div class="content-header">
+                <div class="round-detail-title">
+                    <h2 id="activeRoundDateText">รอบวันที่ --/--/----</h2>
+                    <span class="bill-count-badge" id="billCountBadge">0 บิล</span>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-success" id="openAddBillModalBtn">
+                        <i class="fa-solid fa-plus"></i> เพิ่มบิลย่อย
+                    </button>
+                    <button class="btn btn-secondary" id="exportAllSummaryBtn">
+                        <i class="fa-solid fa-file-excel"></i> คัดลอกตารางสรุป
+                    </button>
+                    <button class="btn btn-danger-outline" id="deleteRoundBtn">
+                        <i class="fa-solid fa-trash-can"></i> ลบรอบนี้
+                    </button>
+                </div>
+            </div>
+
+            <!-- Customer Statements Grid -->
+            <section class="customer-grid" id="customerGrid">
+                <!-- Customer cards will be dynamically rendered here -->
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal: Add/Edit Round -->
+    <div id="roundModal" class="modal-overlay">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3 id="roundModalTitle">เพิ่มรอบบิลใหม่</h3>
+                <button class="close-modal-btn" onclick="closeModal('roundModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="roundForm">
+                    <div class="form-group">
+                        <label for="roundDateInput">วันที่รอบบิล (เช่น 16/06/2569)</label>
+                        <input type="text" id="roundDateInput" placeholder="DD/MM/YYYY" required autocomplete="off">
+                        <small class="form-tip">รูปแบบ: วัน/เดือน/ปีพุทธศักราช (เช่น 01/06/2569)</small>
+                    </div>
+                    
+                    <!-- AI Receipt Image Scanner Upload Area -->
+                    <div class="form-group" style="margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem;">
+                        <label>หรือ อัปโหลดภาพถ่ายลายมือใบเสร็จ (AI Scan)</label>
+                        <div class="upload-dropzone" id="uploadDropzone">
+                            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2rem; margin-bottom: 0.5rem; color: var(--color-primary);"></i>
+                            <span>ลากภาพมาวาง หรือคลิกเพื่อเลือกไฟล์</span>
+                            <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                        </div>
+                        <div id="imagePreviewContainer" style="display: none; margin-top: 0.8rem; text-align: center; position: relative;">
+                            <img id="imagePreview" src="" alt="Preview" style="max-width: 100%; max-height: 150px; border-radius: 8px; border: 1px solid var(--card-border);">
+                            <div style="margin-top: 0.5rem;">
+                                <button type="button" class="btn btn-danger-outline" id="removeImageBtn" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; width: auto; display: inline-flex; height: auto;">ลบรูปภาพ</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="btn btn-success" id="aiScanBtn" style="width: 100%; margin-top: 1rem; display: none; justify-content: center;">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> สแกนลายมือสรุปยอดด้วย AI
+                    </button>
+
+                    <div class="form-actions" style="margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('roundModal')">ยกเลิก</button>
+                        <button type="submit" class="btn btn-primary" id="saveRoundBtn">บันทึก</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add/Edit Bill Item -->
+    <div id="billModal" class="modal-overlay">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3 id="billModalTitle">เพิ่มรายการบิล</h3>
+                <button class="close-modal-btn" onclick="closeModal('billModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="billForm">
+                    <input type="hidden" id="editBillIndex" value="">
+                    
+                    <div class="form-group">
+                        <label for="billNameInput">ชื่อรายการย่อย/ชื่อลูกค้า (เช่น นัน1, พี่อบ2)</label>
+                        <input type="text" id="billNameInput" placeholder="พิมพ์ชื่อบิลย่อย..." required autocomplete="off" list="nameSuggestions">
+                        <datalist id="nameSuggestions">
+                            <!-- Populated dynamically with unique customer names -->
+                        </datalist>
+                        <small class="form-tip">ระบบจะทำการจัดกลุ่มตามชื่อหลักโดยอัตโนมัติ (เช่น นัน1, นัน2 จะจัดกลุ่มใต้ชื่อ นัน)</small>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="billBeforeInput">ยอดเงินเต็ม (บาท)</label>
+                            <input type="number" id="billBeforeInput" step="0.01" min="0" placeholder="0.00" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="billAfterInput">ยอดที่จ่ายจริง (บาท)</label>
+                            <input type="number" id="billAfterInput" step="0.01" min="0" placeholder="0.00" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="autoCalcDiscount" checked>
+                        <label for="autoCalcDiscount">คิดส่วนลด 20% อัตโนมัติ (ยอดจ่ายจริง = ยอดเต็ม × 0.8)</label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="billNoteInput">หมายเหตุ (เช่น เลขวิ่ง, ถูกรางวัล -500 บาท)</label>
+                        <input type="text" id="billNoteInput" placeholder="ระบุรายละเอียดเพิ่มเติม..." autocomplete="off">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="billStatusInput">สถานะบิล</label>
+                        <select id="billStatusInput">
+                            <option value="รอโอน">รอโอน</option>
+                            <option value="โอนแล้ว">โอนแล้ว</option>
+                        </select>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('billModal')">ยกเลิก</button>
+                        <button type="submit" class="btn btn-primary">บันทึก</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Settings (API Key Config) -->
+    <div id="settingsModal" class="modal-overlay">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>ตั้งค่าคีย์สำหรับสแกนลายมือ AI</h3>
+                <button class="close-modal-btn" onclick="closeModal('settingsModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="settingsForm">
+                    <div class="form-group">
+                        <label for="geminiApiKeyInput">Google Gemini API Key</label>
+                        <input type="password" id="geminiApiKeyInput" placeholder="ใส่รหัส API Key ของคุณที่นี่..." autocomplete="off">
+                        <small class="form-tip" style="line-height: 1.5; margin-top: 0.3rem;">
+                            รหัส API Key จะบันทึกอยู่ในพื้นที่เก็บข้อมูลเบราว์เซอร์ของคุณเท่านั้น (LocalStorage)<br>
+                            <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--color-primary); font-weight: 600; text-decoration: underline; display: inline-flex; align-items: center; gap: 0.2rem; margin-top: 0.3rem;">
+                                <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.7rem;"></i> คลิกขอ API Key ฟรีจาก Google AI Studio
+                            </a>
+                        </small>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('settingsModal')">ยกเลิก</button>
+                        <button type="submit" class="btn btn-primary">บันทึกรหัสคีย์</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: AI Scan Result Verification Preview -->
+    <div id="scanPreviewModal" class="modal-overlay">
+        <div class="modal-content glass-card" style="max-width: 650px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-wand-magic-sparkles text-teal"></i> ตรวจสอบผลการวิเคราะห์ลายมือ AI</h3>
+                <button class="close-modal-btn" onclick="closeModal('scanPreviewModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="scannedRoundDate">วันที่ของรอบชำระเงินที่ตรวจพบ</label>
+                    <input type="text" id="scannedRoundDate" placeholder="DD/MM/YYYY" autocomplete="off" required>
+                    <small class="form-tip">กรุณาตรวจจับหรือแก้ไขในรูปแบบ วัน/เดือน/ปีพุทธศักราช (เช่น 01/07/2569)</small>
+                </div>
+                
+                <div class="section-title-preview" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin: 1rem 0 0.5rem 0;">
+                    รายการบิลย่อยที่สแกนได้
+                </div>
+                
+                <div class="bill-table-wrapper" style="max-height: 250px; overflow-y: auto; border: 1px solid var(--card-border); border-radius: 12px; background: rgba(0,0,0,0.1);">
+                    <table class="bill-table" style="font-size: 0.78rem;">
+                        <thead>
+                            <tr>
+                                <th style="width: 30%;">รายการ/ชื่อลูกค้า</th>
+                                <th style="width: 20%;">ยอดเงินเต็ม</th>
+                                <th style="width: 20%;">ยอดจ่ายสุทธิ</th>
+                                <th style="width: 20%;">หมายเหตุ</th>
+                                <th style="width: 10%; text-align: center;">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scannedBillsBody">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 0.8rem; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size:0.75rem; color:var(--text-muted);">*แนะนำให้ตรวจสอบตัวเลขและสะกดชื่อเพื่อความถูกต้อง</span>
+                    <button type="button" class="btn btn-secondary" onclick="addScannedRow()" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; width: auto; height: auto;">
+                        <i class="fa-solid fa-plus"></i> เพิ่มรายการ
+                    </button>
+                </div>
+
+                <div class="form-actions" style="margin-top: 1.8rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('scanPreviewModal')">ยกเลิก</button>
+                    <button type="button" class="btn btn-success" id="confirmScanImportBtn">
+                        <i class="fa-solid fa-circle-check"></i> ยืนยันนำเข้าแดชบอร์ด
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Edit Payment Info -->
+    <div id="paymentModal" class="modal-overlay">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>แก้ไขช่องทางการโอนเงิน</h3>
+                <button class="close-modal-btn" onclick="closeModal('paymentModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="paymentForm">
+                    <div class="form-group">
+                        <label for="paymentBankInput">ธนาคาร / ช่องทางโอน (เช่น โอนค่าใช้จ่ายบัญชี SCB)</label>
+                        <input type="text" id="paymentBankInput" required autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="paymentAccNumInput">เลขที่บัญชี (เช่น 271-2-51047-4)</label>
+                        <input type="text" id="paymentAccNumInput" required autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="paymentAccNameInput">ชื่อบัญชี (เช่น พงศกร)</label>
+                        <input type="text" id="paymentAccNameInput" required autocomplete="off">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('paymentModal')">ยกเลิก</button>
+                        <button type="submit" class="btn btn-primary">บันทึกข้อมูล</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Capture Target Container (Used strictly for html2canvas PNG export) -->
+    <div class="capture-container-wrapper" style="position: absolute; left: -9999px; top: -9999px;">
+        <div id="receiptCaptureTarget" class="receipt-card-capture">
+            <!-- Content will be injected dynamically before capture -->
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast">
+        <i class="fa-solid fa-circle-check"></i>
+        <span id="toastMessage">คัดลอกสำเร็จ!</span>
+    </div>
+
+    <!-- Scripts -->
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
