@@ -971,6 +971,17 @@ body {
     font-size: 1.2rem;
 }
 
+/* Desktop defaults for mobile components */
+.mobile-topbar {
+    display: none;
+}
+.sidebar-overlay {
+    display: none;
+}
+.close-sidebar-btn {
+    display: none;
+}
+
 /* Responsive Grid */
 @media (max-width: 1200px) {
     .customer-grid {
@@ -982,11 +993,202 @@ body {
 }
 
 @media (max-width: 768px) {
+    /* Mobile Header Top Bar */
+    .mobile-topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 60px;
+        background: rgba(15, 11, 32, 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--card-border);
+        padding: 0 1.2rem;
+        z-index: 999;
+    }
+    
+    .mobile-topbar .logo {
+        font-size: 1.4rem;
+        color: #ffffff;
+    }
+    
+    .mobile-menu-toggle, .mobile-settings-toggle {
+        background: none;
+        border: none;
+        color: #ffffff;
+        font-size: 1.2rem;
+        cursor: pointer;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        transition: background 0.2s;
+    }
+    
+    .mobile-menu-toggle:hover, .mobile-settings-toggle:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Overlay Background for Sidebar Drawer */
+    .sidebar-overlay {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        z-index: 1001;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+    
+    .sidebar-overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Container padding-top to avoid overlapping with topbar */
     .app-container {
         grid-template-columns: 1fr;
+        padding-top: 60px;
     }
+
+    /* Transform Sidebar into Slide-out Drawer */
     .sidebar {
-        display: none; /* Mobile dashboard would need sidebar toggles */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 280px;
+        height: 100vh;
+        z-index: 1002;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+        background-color: var(--bg-sidebar);
+        display: flex !important;
+        flex-direction: column;
+    }
+    
+    .sidebar.show-drawer {
+        transform: translateX(0);
+    }
+
+    /* Close button on Mobile Sidebar */
+    .close-sidebar-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-size: 1.2rem;
+        cursor: pointer;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        transition: all 0.2s;
+    }
+    
+    .close-sidebar-btn:hover {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Shift sidebar header content to avoid overlaying close button */
+    .sidebar-header {
+        padding-right: 2rem;
+    }
+
+    /* Adjust Main Content padding */
+    .main-content {
+        padding: 1.5rem 1.2rem;
+        height: auto;
+        min-height: calc(100vh - 60px);
+    }
+
+    /* Adjust top search bar */
+    .topbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .search-container {
+        width: 100%;
+    }
+
+    /* Adjust stats cards */
+    .stats-overview {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.8rem;
+        margin-bottom: 1.8rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+        gap: 0.8rem;
+        border-radius: 16px;
+    }
+    
+    .stat-icon-wrapper {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        font-size: 1.1rem;
+    }
+    
+    .stat-val {
+        font-size: 1.15rem;
+    }
+
+    /* Adjust customer cards Actions */
+    .card-actions {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-overview {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .content-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    
+    .content-header .actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .content-header .btn {
+        width: 100%;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+    .modal-content {
+        padding: 1.2rem;
     }
 }
 
@@ -1160,4 +1362,19 @@ body {
 .edit-payment-btn:hover {
     color: var(--color-primary);
     background: rgba(255, 255, 255, 0.05);
+}
+
+/* HEIC Placeholder Box */
+.heic-placeholder-box {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
 }

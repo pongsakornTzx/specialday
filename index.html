@@ -16,9 +16,29 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
+    <!-- Mobile Top Bar -->
+    <div class="mobile-topbar" id="mobileTopbar">
+        <button class="mobile-menu-toggle" id="mobileMenuToggle" title="เปิดเมนู">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="logo">
+            <i class="fa-solid fa-receipt icon-gradient"></i>
+            <span>Special<span>Day</span></span>
+        </div>
+        <button class="mobile-settings-toggle" id="mobileSettingsToggle" title="ตั้งค่า API Key">
+            <i class="fa-solid fa-gear"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar Overlay backdrop for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <div class="app-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
+            <button class="close-sidebar-btn" id="closeSidebarBtn" title="ปิดเมนู">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
             <div class="sidebar-header">
                 <div class="logo">
                     <i class="fa-solid fa-receipt icon-gradient"></i>
@@ -164,11 +184,11 @@
                     <!-- AI Receipt Image Scanner Upload Area -->
                     <div class="form-group" style="margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem;">
                         <label>หรือ อัปโหลดภาพถ่ายลายมือใบเสร็จ (AI Scan)</label>
-                        <div class="upload-dropzone" id="uploadDropzone">
+                        <label class="upload-dropzone" id="uploadDropzone" for="imageInput" style="cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                             <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2rem; margin-bottom: 0.5rem; color: var(--color-primary);"></i>
-                            <span>ลากภาพมาวาง หรือคลิกเพื่อเลือกไฟล์</span>
+                            <span>ลากภาพมาวาง หรือแตะเพื่อเลือกรูปภาพ</span>
                             <input type="file" id="imageInput" accept="image/*" style="display: none;">
-                        </div>
+                        </label>
                         <div id="imagePreviewContainer" style="display: none; margin-top: 0.8rem; text-align: center; position: relative;">
                             <img id="imagePreview" src="" alt="Preview" style="max-width: 100%; max-height: 150px; border-radius: 8px; border: 1px solid var(--card-border);">
                             <div style="margin-top: 0.5rem;">

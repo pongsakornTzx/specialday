@@ -247,6 +247,31 @@ function setupEventListeners() {
             afterInput.readOnly = false;
         }
     });
+
+    // Mobile Navigation Drawer Event Listeners
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    document.getElementById('mobileMenuToggle').addEventListener('click', () => {
+        sidebar.classList.add('show-drawer');
+        sidebarOverlay.classList.add('show');
+    });
+
+    document.getElementById('closeSidebarBtn').addEventListener('click', () => {
+        sidebar.classList.remove('show-drawer');
+        sidebarOverlay.classList.remove('show');
+    });
+
+    sidebarOverlay.addEventListener('click', () => {
+        sidebar.classList.remove('show-drawer');
+        sidebarOverlay.classList.remove('show');
+    });
+
+    document.getElementById('mobileSettingsToggle').addEventListener('click', () => {
+        const savedKey = localStorage.getItem('GEMINI_API_KEY') || '';
+        document.getElementById('geminiApiKeyInput').value = savedKey;
+        openModal('settingsModal');
+    });
 }
 
 // Setup Drag & Drop Image Uploader
@@ -254,9 +279,6 @@ function setupImageUpload() {
     const dropzone = document.getElementById('uploadDropzone');
     const imageInput = document.getElementById('imageInput');
     const removeImageBtn = document.getElementById('removeImageBtn');
-
-    // Click to select file
-    dropzone.addEventListener('click', () => imageInput.click());
 
     // Drag events
     ['dragenter', 'dragover'].forEach(eventName => {
@@ -298,22 +320,60 @@ function setupImageUpload() {
 
 // Display selected image and toggle buttons
 function handleSelectedImage(file) {
-    if (!file.type.startsWith('image/')) {
+    const isImageMime = file.type && file.type.startsWith('image/');
+    const extension = file.name ? file.name.split('.').pop().toLowerCase() : '';
+    const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif', 'bmp'];
+    const isImageExt = validExtensions.includes(extension);
+
+    if (!isImageMime && !isImageExt) {
         showToast('กรุณาเลือกเฉพาะไฟล์รูปภาพเท่านั้น', true);
         return;
     }
 
     selectedScanFile = file;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        document.getElementById('imagePreview').src = e.target.result;
+    const isHEIC = extension === 'heic' || extension === 'heif' || file.type === 'image/heic' || file.type === 'image/heif';
+
+    if (isHEIC) {
+        // Display a nice placeholder icon for HEIC files since browser can't render it directly
+        document.getElementById('imagePreview').src = '';
+        document.getElementById('imagePreview').style.display = 'none';
+        
+        let placeholder = document.getElementById('heicPlaceholder');
+        if (!placeholder) {
+            placeholder = document.createElement('div');
+            placeholder.id = 'heicPlaceholder';
+            placeholder.className = 'heic-placeholder-box';
+            document.getElementById('imagePreviewContainer').insertBefore(placeholder, document.getElementById('imagePreview'));
+        }
+        placeholder.style.display = 'block';
+        placeholder.innerHTML = `
+            <i class="fa-solid fa-file-image" style="font-size: 3rem; color: var(--color-primary); margin-bottom: 0.5rem;"></i>
+            <div style="font-size: 0.8rem; color: #ffffff; word-break: break-all; padding: 0 1rem;">${file.name}</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.2rem;">(รูปภาพ HEIC จาก iPhone - สามารถส่งสแกน AI ได้ทันที)</div>
+        `;
+        
         document.getElementById('imagePreviewContainer').style.display = 'block';
         document.getElementById('uploadDropzone').style.display = 'none';
         document.getElementById('aiScanBtn').style.display = 'flex';
-        document.getElementById('saveRoundBtn').style.display = 'none'; // Hide manual save round
-    };
-    reader.readAsDataURL(file);
+        document.getElementById('saveRoundBtn').style.display = 'none';
+    } else {
+        // Normal image preview
+        const placeholder = document.getElementById('heicPlaceholder');
+        if (placeholder) placeholder.style.display = 'none';
+        
+        document.getElementById('imagePreview').style.display = 'inline-block';
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.getElementById('imagePreview').src = e.target.result;
+            document.getElementById('imagePreviewContainer').style.display = 'block';
+            document.getElementById('uploadDropzone').style.display = 'none';
+            document.getElementById('aiScanBtn').style.display = 'flex';
+            document.getElementById('saveRoundBtn').style.display = 'none'; // Hide manual save round
+        };
+        reader.readAsDataURL(file);
+    }
 }
 
 // Reset Image Uploader state
@@ -322,6 +382,10 @@ function resetImageUpload() {
     document.getElementById('imageInput').value = '';
     document.getElementById('imagePreview').src = '';
     document.getElementById('imagePreviewContainer').style.display = 'none';
+    
+    const placeholder = document.getElementById('heicPlaceholder');
+    if (placeholder) placeholder.style.display = 'none';
+    
     document.getElementById('uploadDropzone').style.display = 'flex';
     document.getElementById('aiScanBtn').style.display = 'none';
     document.getElementById('saveRoundBtn').style.display = 'inline-flex'; // Show manual save round
@@ -395,6 +459,22 @@ async function handleAIScan() {
   ]
 }`;
 
+        let mimeType = selectedScanFile.type;
+        if (!mimeType) {
+            const extension = selectedScanFile.name ? selectedScanFile.name.split('.').pop().toLowerCase() : '';
+            if (extension === 'png') {
+                mimeType = 'image/png';
+            } else if (extension === 'webp') {
+                mimeType = 'image/webp';
+            } else if (extension === 'heic') {
+                mimeType = 'image/heic';
+            } else if (extension === 'heif') {
+                mimeType = 'image/heif';
+            } else {
+                mimeType = 'image/jpeg';
+            }
+        }
+
         const payload = {
             contents: [
                 {
@@ -402,7 +482,7 @@ async function handleAIScan() {
                         { text: prompt },
                         {
                             inlineData: {
-                                mimeType: selectedScanFile.type,
+                                mimeType: mimeType,
                                 data: base64Image
                             }
                         }
@@ -577,6 +657,14 @@ function selectRound(key) {
     calculateStats();
     renderCustomers();
     editingCustomerName = null;
+
+    // Close sidebar drawer on mobile after selection
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (sidebar && sidebar.classList.contains('show-drawer')) {
+        sidebar.classList.remove('show-drawer');
+        overlay.classList.remove('show');
+    }
 }
 
 // Update Stats UI when there is no data
