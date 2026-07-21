@@ -426,9 +426,6 @@ async function handleAIScan() {
     try {
         const base64Image = await fileToBase64(selectedScanFile);
         
-        // Construct API endpoint using gemini-flash-latest
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
-        
         const prompt = `วิเคราะห์ภาพถ่ายกระดาษเขียนลายมือสรุปค่าใช้จ่ายนี้ 
 และสกัดข้อมูลออกมาเป็นรูปแบบ JSON ตามโครงสร้างที่กำหนดเท่านั้น:
 
@@ -494,16 +491,43 @@ async function handleAIScan() {
             }
         };
 
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
+        let response;
+        let success = false;
+        let lastError = '';
+        
+        // Loop through models to handle quota issues on free tier models and high demand 503 limits
+        const modelsToTry = ['gemini-3.1-flash-lite', 'gemini-flash-lite-latest', 'gemini-2.0-flash', 'gemini-flash-latest'];
+        
+        for (const model of modelsToTry) {
+            console.log(`Attempting AI Scan using model: ${model}`);
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+            
+            try {
+                response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (response.ok) {
+                    success = true;
+                    break;
+                } else {
+                    const errData = await response.json().catch(() => ({}));
+                    const errMsg = errData.error?.message || `Status ${response.status}`;
+                    lastError = `Model ${model} error: ${errMsg}`;
+                    console.warn(lastError);
+                }
+            } catch (e) {
+                lastError = `Model ${model} connection error: ${e.message}`;
+                console.warn(lastError);
+            }
+        }
 
-        if (!response.ok) {
-            throw new Error(`API returned status ${response.status}`);
+        if (!success) {
+            throw new Error(lastError || 'ระบบไม่สามารถเข้าถึงโมเดลสแกนได้เนื่องจากโควต้าเต็มหรือโมเดลไม่พร้อมใช้งาน');
         }
 
         const responseData = await response.json();
@@ -517,7 +541,7 @@ async function handleAIScan() {
 
     } catch (err) {
         console.error('Gemini API Error: ', err);
-        showToast('เกิดข้อผิดพลาดในการเรียกระบบสแกน AI หรือรหัส API Key ไม่ถูกต้อง', true);
+        showToast(`เกิดข้อผิดพลาด: ${err.message || 'รหัส API Key ไม่ถูกต้องหรือเครือข่ายมีปัญหา'}`, true);
     } finally {
         // Restore button state
         aiScanBtn.disabled = false;
